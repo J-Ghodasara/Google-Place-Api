@@ -29,7 +29,6 @@ import android.net.Uri
 import retrofit2.Call
 import retrofit2.Response
 import java.util.*
-import javax.security.auth.callback.Callback
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMarkerClickListener, GoogleApiClient.ConnectionCallbacks, LocationListener {
@@ -39,11 +38,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
 
     }
 
-    lateinit var locationreq: LocationRequest
+    lateinit var locationReq: LocationRequest
     private lateinit var mMap: GoogleMap
     lateinit var googleClient: GoogleApiClient
     lateinit var loc: Location
-    var mylocation: Marker? = null
+    var myLocation: Marker? = null
     lateinit var geocoder: Geocoder
     var latlng: LatLng? = null
     lateinit var destination: LatLng
@@ -52,13 +51,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
     lateinit var url: String
     lateinit var locationCallback: LocationCallback
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
-    lateinit var destinationmarker: Marker
-    var mcount: Int = 1
-    var lcount: Int = 1
+    lateinit var destinationMarker: Marker
+    var mCount: Int = 1
+    var lCount: Int = 1
     var lat: Double? = null
     var lon: Double? = null
-    lateinit var iGoogleApiServices:IGoogleApiServices
-    lateinit var pojo:POJO
+    lateinit var iGoogleApiServices: IGoogleApiServices
+    lateinit var pojo: POJO
 
 
     override fun onConnectionFailed(p0: ConnectionResult) {
@@ -67,31 +66,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
 
 
     override fun onConnected(p0: Bundle?) {
-//        locationreq= LocationRequest()
-//        locationreq.interval = 1000
-//        Log.i("Called","in onconnected")
-//        locationreq.fastestInterval = 1000
-//        locationreq.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
-
-        // if(ActivityCompat.checkSelfPermission(applicationContext,android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(applicationContext,android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
-        // Log.i("check","in onconnected")
-//            BuildLocationreq()
-//            Buildlocationcallback()
-//            if(ContextCompat.checkSelfPermission(this,android.Manifest.permission.ACCESS_FINE_LOCATION)== PackageManager.PERMISSION_GRANTED){
-//                fusedLocationProviderClient=LocationServices.getFusedLocationProviderClient(this)
-        // fusedLocationProviderClient.requestLocationUpdates(locationreq,locationCallback, Looper.myLooper())
-//            }
-        // }
-
 
     }
 
     fun BuildLocationreq() {
-        locationreq = LocationRequest()
-        locationreq.interval = 1000
+        locationReq = LocationRequest()
+        locationReq.interval = 1000
         Log.i("Called", "in onconnected")
-        locationreq.fastestInterval = 1000
-        locationreq.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+        locationReq.fastestInterval = 1000
+        locationReq.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
     }
 
     fun Buildlocationcallback() {
@@ -100,20 +83,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
                 loc = p0!!.locations[p0.locations.size - 1]
 
                 latlng = LatLng(loc.latitude, loc.longitude)
-                if (mylocation != null) {
-                    mylocation!!.remove()
+                if (myLocation != null) {
+                    myLocation!!.remove()
                 }
 
                 var markerOptions: MarkerOptions = MarkerOptions()
                 markerOptions.position(latlng!!)
                 markerOptions.title("My Location")
                 markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
-                mylocation = mMap.addMarker(markerOptions)
+                myLocation = mMap.addMarker(markerOptions)
                 Log.i("Move", "animated")
-                if (mcount == 1) {
+                if (mCount == 1) {
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng))
                     mMap.animateCamera(CameraUpdateFactory.newLatLng(latlng))
-                    mcount++
+                    mCount++
                 }
 
             }
@@ -123,24 +106,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
 
 
     override fun onLocationChanged(location: Location?) {
-
-//       loc= location!!
-//        latitude=location.latitude
-//        longitude=location.longitude
-////        if(mylocation == null){
-////            mylocation!!.remove()
-////        }
-//
-//     latlng= LatLng(location.latitude,location.longitude)
-//
-//        var markerOptions:MarkerOptions= MarkerOptions()
-//        markerOptions.position(latlng!!)
-//        markerOptions.title("My Location")
-//        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
-//        mylocation=mMap.addMarker(markerOptions)
-//        Log.i("Move","animated")
-//        mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng))
-//        mMap.animateCamera(CameraUpdateFactory.newLatLng(latlng))
     }
 
 
@@ -184,14 +149,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
 
-        iGoogleApiServices=RetrofitClient.getClient("https://maps.google.com/").create(IGoogleApiServices::class.java)
+        iGoogleApiServices = RetrofitClient.getClient("https://maps.google.com/").create(IGoogleApiServices::class.java)
 
         var count = 1
         BuildLocationreq()
         Buildlocationcallback()
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
-            fusedLocationProviderClient.requestLocationUpdates(locationreq, locationCallback, Looper.myLooper())
+            fusedLocationProviderClient.requestLocationUpdates(locationReq, locationCallback, Looper.myLooper())
         }
 
         geocoder = Geocoder(this)
@@ -231,54 +196,43 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
             markerOptions.position(destination)
             markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
 
-            destinationmarker = mMap.addMarker(markerOptions)
-            if (lcount == 1) {
+            destinationMarker = mMap.addMarker(markerOptions)
+            if (lCount == 1) {
                 mMap.animateCamera(CameraUpdateFactory.zoomBy(20F))
                 mMap.animateCamera(CameraUpdateFactory.newLatLng(destination))
-                lcount++
+                lCount++
             }
 
-
-            // var line:Polyline=mMap.addPolyline(PolylineOptions().add(latlng,destination).width(5F).color(Color.RED))
 
         })
 
         nearby.setOnClickListener(View.OnClickListener {
-//            var nearbyplace: GetNearbyPlaces = GetNearbyPlaces()
-//            var dataTrans = Array(2) { Any() }
-//            mMap.clear()
-            var nearbyadd: String = address.text.toString()
-//            url = geturl(20.121, -15.14313, nearbyadd)
-//            Log.i("Size", dataTrans.size.toString())
-//            dataTrans[0] = this
-//
-//
-//
-//            nearbyplace.execute(dataTrans)
 
-nearByplace(nearbyadd)
+            var nearbyadd: String = address.text.toString()
+
+            nearByplace(nearbyadd)
         })
     }
 
-    fun nearByplace(typeplace:String){
+    fun nearByplace(typeplace: String) {
         mMap.clear()
-        val url= geturl(loc.latitude,loc.longitude,typeplace)
-        iGoogleApiServices.getnearbyplaces(url).enqueue(object:retrofit2.Callback<POJO> {
+        val url = geturl(loc.latitude, loc.longitude, typeplace)
+        iGoogleApiServices.getnearbyplaces(url).enqueue(object : retrofit2.Callback<POJO> {
             override fun onFailure(call: Call<POJO>?, t: Throwable?) {
-        Toast.makeText(applicationContext,"Failed",Toast.LENGTH_LONG).show()
+                Toast.makeText(applicationContext, "Failed", Toast.LENGTH_LONG).show()
             }
 
             override fun onResponse(call: Call<POJO>?, response: Response<POJO>?) {
-                pojo= response!!.body()!!
-                var latlng2:LatLng?= null
-                if(response!!.isSuccessful){
-                    for(i in 0 until response.body()!!.results!!.size){
-                        val markerOptions:MarkerOptions= MarkerOptions()
-                        val googlePlace= response.body()!!.results[i]
-                        val lat= googlePlace.geometry.location.lat
-                        val lng= googlePlace.geometry.location.lng
-                        val placename= googlePlace.name
-                        latlng2=LatLng(lat,lng)
+                pojo = response!!.body()!!
+                var latlng2: LatLng? = null
+                if (response!!.isSuccessful) {
+                    for (i in 0 until response.body()!!.results!!.size) {
+                        val markerOptions: MarkerOptions = MarkerOptions()
+                        val googlePlace = response.body()!!.results[i]
+                        val lat = googlePlace.geometry.location.lat
+                        val lng = googlePlace.geometry.location.lng
+                        val placename = googlePlace.name
+                        latlng2 = LatLng(lat, lng)
 
                         markerOptions.position(latlng2)
                         markerOptions.title(placename)
@@ -296,10 +250,10 @@ nearByplace(nearbyadd)
     override fun onMarkerClick(p0: Marker?): Boolean {
 
         when {
-            p0!! == mylocation -> {
+            p0!! == myLocation -> {
                 return false
             }
-            p0 == destinationmarker -> {
+            p0 == destinationMarker -> {
                 val uri = String.format(Locale.ENGLISH, "http://maps.google.com/maps?saddr=%f,%f(%s)&daddr=%f,%f (%s)", loc.latitude, loc.longitude, "Home Sweet Home", lat, lon, "Travel HERE")
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
                 intent.`package` = "com.google.android.apps.maps"
@@ -338,7 +292,7 @@ nearByplace(nearbyadd)
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
      * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a mylocation near Sydney, Australia.
+     * we just add a myLocation near Sydney, Australia.
      * If Google Play services is not installed on the device, the user will be prompted to install
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
