@@ -19,18 +19,18 @@
         android:id="@+id/nearby"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="97dp"
-        android:layout_marginStart="97dp"
+        android:layout_marginLeft="80dp"
+        android:layout_marginStart="80dp"
         android:text="Near Me"
         map:layout_constraintStart_toStartOf="parent"
         map:layout_constraintTop_toBottomOf="@+id/address" />
 
     <Button
         android:id="@+id/change"
-        android:layout_width="wrap_content"
+        android:layout_width="99dp"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="188dp"
-        android:layout_marginStart="188dp"
+        android:layout_marginLeft="166dp"
+        android:layout_marginStart="166dp"
         android:text="Change Map"
         map:layout_constraintStart_toStartOf="parent"
         map:layout_constraintTop_toBottomOf="@+id/address" />
@@ -40,6 +40,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Search"
+        map:layout_constraintStart_toStartOf="@+id/address"
+        map:layout_constraintTop_toBottomOf="@+id/address" />
+
+    <Button
+        android:id="@+id/recognize"
+        android:layout_width="99dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="264dp"
+        android:layout_marginStart="264dp"
+        android:text="Recognize"
         map:layout_constraintStart_toStartOf="@+id/address"
         map:layout_constraintTop_toBottomOf="@+id/address" />
 
