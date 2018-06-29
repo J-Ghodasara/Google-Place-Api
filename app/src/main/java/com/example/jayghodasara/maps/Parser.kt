@@ -31,14 +31,14 @@ class Parser
                 vicinity = jsonobj.getString("vicinity")
             }
 
-            latitude = jsonobj.getJSONObject("geometry").getJSONObject("location").getString("lat")
+            latitude = jsonobj.getJSONObject("geometry").getJSONObject("location").getString("destiLat")
             longitude = jsonobj.getJSONObject("geometry").getJSONObject("location").getString("lng")
 
             reference = jsonobj.getString("reference")
 
             googlePlaceMap.put("place_name", placeName)
             googlePlaceMap.put("vicinity", vicinity)
-            googlePlaceMap.put("lat", latitude)
+            googlePlaceMap.put("destiLat", latitude)
             googlePlaceMap.put("lng", longitude)
             googlePlaceMap.put("reference", reference)
 

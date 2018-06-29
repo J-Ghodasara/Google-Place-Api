@@ -56,7 +56,7 @@ class GetNearbyPlaces : AsyncTask<Any,String,String>() {
 
             val placeName = googlePlace.get("place_name")
             val vicinity = googlePlace.get("vicinity")
-            val lat = java.lang.Double.parseDouble(googlePlace.get("lat"))
+            val lat = java.lang.Double.parseDouble(googlePlace.get("destiLat"))
             val lng = java.lang.Double.parseDouble(googlePlace.get("lng"))
 
             val latLng = LatLng(lat, lng)

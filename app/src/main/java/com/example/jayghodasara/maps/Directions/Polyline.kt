@@ -1,0 +1,5 @@
+package com.example.jayghodasara.maps.Directions
+
+data class Polyline(
+        val points: String
+)

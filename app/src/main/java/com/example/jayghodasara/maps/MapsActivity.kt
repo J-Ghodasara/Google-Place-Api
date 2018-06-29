@@ -29,13 +29,21 @@ import com.google.android.gms.maps.model.*
 import kotlinx.android.synthetic.main.activity_maps.*
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
 import android.net.Uri
+import android.os.AsyncTask
 import android.support.v4.content.LocalBroadcastManager
+import com.example.jayghodasara.maps.Directions.DirectionsJSONParser
+import com.example.jayghodasara.maps.Directions.DirectionsPojo
 import com.google.android.gms.common.api.ResultCallback
 import com.google.android.gms.common.api.Status
+import org.json.JSONException
+import org.json.JSONObject
 import retrofit2.Call
+import retrofit2.Callback
 import retrofit2.Response
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 
@@ -62,20 +70,22 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
     lateinit var destinationMarker: Marker
     var mCount: Int = 1
     var lCount: Int = 1
-    var lat: Double? = null
-    var lon: Double? = null
+    var destiLat: Double? = null
+    var destiLng: Double? = null
     lateinit var iGoogleApiServices: IGoogleApiServices
+    lateinit var iGoogleApiServices2: IGoogleApiServices
     lateinit var pojo: POJO
-    var GEOFENCE_ID_STAN_UNI= "My_Location"
-    var GEOFENCE_RADIUS_IN_METERS= 100
-    var pendingIntent:PendingIntent? = null
-    lateinit var broadcastReceiver:BroadcastReceiver
+    var GEOFENCE_ID_STAN_UNI = "My_Location"
+    var GEOFENCE_RADIUS_IN_METERS = 100
+    var pendingIntent: PendingIntent? = null
+    lateinit var broadcastReceiver: BroadcastReceiver
 
 
     companion object {
-    val AREA_LANDMARKS:HashMap<String,LatLng> = HashMap<String,LatLng>()
+        val AREA_LANDMARKS: HashMap<String, LatLng> = HashMap<String, LatLng>()
 
-}
+    }
+
     override fun onConnectionFailed(p0: ConnectionResult) {
         Log.i("failed", "in")
     }
@@ -87,7 +97,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
     }
 
 
-
     fun BuildLocationreq() {
         locationReq = LocationRequest()
         locationReq.interval = 1000
@@ -96,55 +105,61 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
         locationReq.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
     }
 
-    private fun geoFencingReq():GeofencingRequest{
-        var builder:GeofencingRequest.Builder= GeofencingRequest.Builder()
+    //For GeoFencing--> Start
+    private fun geoFencingReq(): GeofencingRequest {
+        var builder: GeofencingRequest.Builder = GeofencingRequest.Builder()
         builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
         builder.addGeofence(getGeofence())
         return builder.build()
     }
+    //For GeoFencing--> End
 
+
+    //For GeoFencing--> Start
     fun getGeofence(): Geofence? {
-        var latlon:LatLng= AREA_LANDMARKS[GEOFENCE_ID_STAN_UNI]!!
+        var latlon: LatLng = AREA_LANDMARKS[GEOFENCE_ID_STAN_UNI]!!
 
-        var geofence:Geofence = Geofence.Builder()
-        .setRequestId(GEOFENCE_ID_STAN_UNI)
-        .setCircularRegion(latlon.latitude,latlon.longitude, GEOFENCE_RADIUS_IN_METERS.toFloat())
-        .setNotificationResponsiveness(1000)
-        .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+        var geofence: Geofence = Geofence.Builder()
+                .setRequestId(GEOFENCE_ID_STAN_UNI)
+                .setCircularRegion(latlon.latitude, latlon.longitude, GEOFENCE_RADIUS_IN_METERS.toFloat())
+                .setNotificationResponsiveness(1000)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
                 .setExpirationDuration(1000000)
-        .build()
+                .build()
         return geofence
 
-
-
-
     }
+    //For GeoFencing--> End
 
-    fun startGeoFencing(){
-        pendingIntent=pendingIntent()
 
-        try{
+    //For GeoFencing--> Start
+    fun startGeoFencing() {
+        pendingIntent = pendingIntent()
 
-            LocationServices.GeofencingApi.addGeofences(googleClient,geoFencingReq(),pendingIntent).setResultCallback(object : ResultCallback<Status>{
+        try {
+
+            LocationServices.GeofencingApi.addGeofences(googleClient, geoFencingReq(), pendingIntent).setResultCallback(object : ResultCallback<Status> {
                 override fun onResult(p0: Status) {
-                    Toast.makeText(applicationContext,"Geofencing Started",Toast.LENGTH_LONG).show()
+                    Toast.makeText(applicationContext, "Geofencing Started", Toast.LENGTH_LONG).show()
                 }
 
             })
-        }catch (e:SecurityException){
+        } catch (e: SecurityException) {
             e.printStackTrace()
         }
     }
+    //For GeoFencing--> End
 
-    fun pendingIntent():PendingIntent{
-        if(pendingIntent!=null){
+    fun pendingIntent(): PendingIntent {
+        if (pendingIntent != null) {
             return pendingIntent as PendingIntent
         }
-        var intent:Intent= Intent(this,GeoFenceRegistrationService::class.java)
+        var intent: Intent = Intent(this, GeoFenceRegistrationService::class.java)
 
-        return PendingIntent.getService(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT)
+        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
+    //for getting my Location --> Start
     fun Buildlocationcallback() {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(p0: LocationResult?) {
@@ -173,11 +188,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
 
 
     }
+    //for getting my Location --> End
 
-//    override fun onStart() {
-//        super.onStart()
-//        googleClient.reconnect()
-//    }
 
     override fun onStop() {
         super.onStop()
@@ -229,8 +241,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
 
-        iGoogleApiServices = RetrofitClient.getClient("https://maps.google.com/").create(IGoogleApiServices::class.java)
-
+        iGoogleApiServices = RetrofitnearbyClient.getClient("https://maps.google.com/").create(IGoogleApiServices::class.java)
+        iGoogleApiServices2= RetrofitClient.getDirectionClient("https://maps.google.com/").create(IGoogleApiServices::class.java)
         var count = 1
         BuildLocationreq()
         Buildlocationcallback()
@@ -261,22 +273,26 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
 
         })
 
-
+        //For Activity Recognition --> Start
         recognize.setOnClickListener(View.OnClickListener {
 
             startTracking()
-            Toast.makeText(applicationContext,"Recognizing",Toast.LENGTH_SHORT).show()
+            Toast.makeText(applicationContext, "Recognizing", Toast.LENGTH_SHORT).show()
         })
+        //For Activity Recognition --> End
 
+        //For getting location we Searched for -->Start
         btn.setOnClickListener(View.OnClickListener {
+
+            mMap.clear()
             var add: String = address.text.toString()
 
             var list: List<Address> = geocoder.getFromLocationName(add, 1)
             var address: Address = list[0]
 
-            lat = address.latitude
-            lon = address.longitude
-            destination = LatLng(lat!!, lon!!)
+            destiLat = address.latitude
+            destiLng = address.longitude
+            destination = LatLng(destiLat!!, destiLng!!)
 
             var markerOptions: MarkerOptions = MarkerOptions()
             markerOptions.title(add)
@@ -295,22 +311,25 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
             //For GeoFencing--> End
 
         })
+        //For getting location we Searched for -->End
 
 
-
-        broadcastReceiver= object:BroadcastReceiver() {
+        //For Activity Recognition --> Start
+        broadcastReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
-                if(intent!!.action == "activity_intent"){
-                    var type:Int= intent.getIntExtra("type",-1)
-                    var confidence= intent.getIntExtra("confidence",0)
-                    handleUserActi(type,confidence)
+                if (intent!!.action == "activity_intent") {
+                    var type: Int = intent.getIntExtra("type", -1)
+                    var confidence = intent.getIntExtra("confidence", 0)
+                    handleUserActi(type, confidence)
+                }
+
             }
 
+
         }
-
-
-    }
         startTracking()
+        //For Activity Recognition --> End
+
 
         //For Nearby Places--> Start
         nearby.setOnClickListener(View.OnClickListener {
@@ -328,48 +347,51 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, IntentFilter("activity_intent"))
     }
 
-    fun handleUserActi( type:Int, confidence:Int){
-        when(type){
+    //For Activity Recognition --> Start
+    fun handleUserActi(type: Int, confidence: Int) {
+        when (type) {
 
-            DetectedActivity.IN_VEHICLE ->{
-                Toast.makeText(applicationContext,"In vehicle",Toast.LENGTH_SHORT).show()
+            DetectedActivity.IN_VEHICLE -> {
+                Toast.makeText(applicationContext, "In vehicle", Toast.LENGTH_SHORT).show()
 
             }
 
-            DetectedActivity.STILL ->{
-                Toast.makeText(applicationContext,"Still",Toast.LENGTH_SHORT).show()
+            DetectedActivity.STILL -> {
+                Toast.makeText(applicationContext, "Still", Toast.LENGTH_SHORT).show()
             }
 
-            DetectedActivity.ON_FOOT ->{
-                Toast.makeText(applicationContext,"On Foot",Toast.LENGTH_SHORT).show()
+            DetectedActivity.ON_FOOT -> {
+                Toast.makeText(applicationContext, "On Foot", Toast.LENGTH_SHORT).show()
             }
 
-            DetectedActivity.TILTING ->{
-                Toast.makeText(applicationContext,"Tilting",Toast.LENGTH_SHORT).show()
+            DetectedActivity.TILTING -> {
+                Toast.makeText(applicationContext, "Tilting", Toast.LENGTH_SHORT).show()
             }
 
-            DetectedActivity.UNKNOWN ->{
-                Toast.makeText(applicationContext,"Unknown",Toast.LENGTH_SHORT).show()
+            DetectedActivity.UNKNOWN -> {
+                Toast.makeText(applicationContext, "Unknown", Toast.LENGTH_SHORT).show()
             }
 
-            DetectedActivity.ON_BICYCLE ->{
-                Toast.makeText(applicationContext,"On Bicycle",Toast.LENGTH_SHORT).show()
+            DetectedActivity.ON_BICYCLE -> {
+                Toast.makeText(applicationContext, "On Bicycle", Toast.LENGTH_SHORT).show()
             }
 
-            DetectedActivity.RUNNING ->{
-                Toast.makeText(applicationContext,"Running",Toast.LENGTH_SHORT).show()
+            DetectedActivity.RUNNING -> {
+                Toast.makeText(applicationContext, "Running", Toast.LENGTH_SHORT).show()
             }
-
 
 
         }
 
     }
+    //For Activity Recognition --> End
 
-    fun startTracking(){
+    //For Activity Recognition --> Start
+    fun startTracking() {
         val intent1 = Intent(applicationContext, BackgroundDetectedService::class.java)
         startService(intent1)
     }
+    //For Activity Recognition --> End
 
 
     //For Nearby Places--> Start
@@ -407,6 +429,78 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
         })
     }
 
+
+    fun getDirection() {
+        mMap.clear()
+        val url = getdirectionsUrl(loc.latitude, loc.longitude)
+        iGoogleApiServices2.getdirections(url).enqueue(object : retrofit2.Callback<String> {
+            override fun onFailure(call: Call<String>?, t: Throwable?) {
+                Toast.makeText(applicationContext, "Failed", Toast.LENGTH_LONG).show()
+            }
+
+            override fun onResponse(call: Call<String>?, response: Response<String>?) {
+                Log.i("Response", response!!.body().toString())
+                Parsertask().execute(response!!.body().toString())
+
+            }
+
+
+        })
+    }
+
+    inner class Parsertask : AsyncTask<String, Int, List<List<HashMap<String, String>>>>() {
+        override fun doInBackground(vararg params: String?): List<List<HashMap<String, String>>> {
+
+            val JsonObject: JSONObject
+            var routes: List<List<HashMap<String, String>>>? = null
+
+            try {
+
+                JsonObject = JSONObject( params[0] )
+                val parser = DirectionsJSONParser()
+                routes = parser.parse(JsonObject)
+            } catch (e: JSONException) {
+                Log.e("Parser Error", e.toString())
+            }
+            return routes!!
+        }
+
+
+        override fun onPostExecute(result: List<List<HashMap<String, String>>>?) {
+            super.onPostExecute(result)
+
+            var points: ArrayList<LatLng>? = null
+            var polyLineOptions: PolylineOptions? = null
+
+            for (i in result!!.indices) {
+
+                points = ArrayList()
+                polyLineOptions = PolylineOptions()
+
+                var path: List<HashMap<String, String>> = result[i]
+
+                for (j in path.indices) {
+
+                    val point = path[j]
+                    val lat = point["lat"]!!.toDouble()
+                    val lon = point["lng"]!!.toDouble()
+                    val position = LatLng(lat, lon)
+
+                    points.add(position)
+                }
+
+                polyLineOptions.addAll(points)
+                polyLineOptions.width(12f)
+                polyLineOptions.color(Color.RED)
+                polyLineOptions.geodesic(true)
+            }
+
+            mMap.addPolyline(polyLineOptions)
+        }
+
+    }
+
+
     //For Nearby Places--> End
 
     override fun onMarkerClick(p0: Marker?): Boolean {
@@ -416,10 +510,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
                 return false
             }
             p0 == destinationMarker -> {
-                val uri = String.format(Locale.ENGLISH, "http://maps.google.com/maps?saddr=%f,%f(%s)&daddr=%f,%f (%s)", loc.latitude, loc.longitude, "Home Sweet Home", lat, lon, "Travel HERE")
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
-                intent.`package` = "com.google.android.apps.maps"
-                startActivity(intent)
+               // iGoogleApiServices = RetrofitClient.getDirectionClient("https://maps.google.com/").create(IGoogleApiServices::class.java)
+                getDirection()
+//                val uri = String.format(Locale.ENGLISH, "http://maps.google.com/maps?saddr=%f,%f(%s)&daddr=%f,%f (%s)", loc.latitude, loc.longitude, "Home Sweet Home", destiLat, destiLng, "Travel HERE")
+//                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
+//                intent.`package` = "com.google.android.apps.maps"
+//                startActivity(intent)
             }
             else -> {
                 return true
@@ -449,6 +545,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
 
         return googleplaceurl.toString()
     }
+
+
+    fun getdirectionsUrl(lat: Double, lng: Double): String {
+
+        var googleplaceurl: StringBuilder = StringBuilder("https://maps.googleapis.com/maps/api/directions/json?")
+        googleplaceurl.append("origin=" + loc.latitude + "," + loc.longitude)
+        googleplaceurl.append("&destination=" + destiLat + "," + destiLng)
+        googleplaceurl.append("&sensor=false")
+        googleplaceurl.append("&mode=driving")
+        googleplaceurl.append("&key=" + "AIzaSyBK91TnH6szzbG3QgBpivMdz_VSuTet1JM")
+
+        return googleplaceurl.toString()
+    }
     //For Nearby Places--> End
 
     /**
@@ -469,7 +578,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
 
             createClient()
             mMap.isMyLocationEnabled = true
-
 
 
         }
